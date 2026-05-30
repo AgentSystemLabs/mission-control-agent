@@ -38,11 +38,9 @@ mission-control-agent
 
 ## Railway
 
-Create a Railway service from this repo and set the Dockerfile path to:
+Create a Railway service from this repo. The repo includes `railway.toml`, which points at `docker/remote-agent/Dockerfile`.
 
-```txt
-docker/remote-agent/Dockerfile
-```
+**Important:** leave **Root Directory** empty (repo root). Do **not** set it to `docker/remote-agent` — the Dockerfile copies `src/`, `package.json`, and `docker-entrypoint.sh` from the repo root; a subdirectory root causes `"/docker-entrypoint.sh": not found` at build time.
 
 Set `MC_AGENT_API_KEY` as a Railway variable. Do not set `MC_AGENT_PORT`; the agent reads Railway's injected `PORT` automatically. Generate a public domain and paste the `https://...` URL into Mission Control.
 

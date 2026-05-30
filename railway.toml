@@ -1,0 +1,10 @@
+# Railway deploy config for the remote agent image.
+# Root Directory in Railway must stay at the repo root (empty / "/") so the
+# Dockerfile can COPY src/, package.json, docker-entrypoint.sh, etc.
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "docker/remote-agent/Dockerfile"
+
+[deploy]
+healthcheckPath = "/health"
+restartPolicyType = "ON_FAILURE"
