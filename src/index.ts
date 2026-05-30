@@ -1,0 +1,14 @@
+export { startAgentFromEnv } from "./start";
+export { loadConfig, DEFAULT_AGENT_PORT, DEFAULT_WORKSPACE_ROOT, DEFAULT_HOOK_API_HOST, DEFAULT_BIND_HOST } from "./config";
+export type { AgentConfig } from "./config";
+export { createAgentServer, AGENT_VERSION, isPaired } from "./server";
+export type { AgentVersions } from "./health";
+export type * from "./protocol";
+export * from "./shared/agent-cli-config";
+export * from "./shared/agent-hooks";
+export * from "./shared/agent-pty-env";
+export * from "./shared/domain";
+export * from "./shared/git-status";
+export * from "./shared/mission-control-hook-env";
+export * from "./shared/pty-spawn-policy";
+export * from "./shared/windows-cmd";

@@ -1,0 +1,57 @@
+{
+  "name": "@agentsystemlabs/mission-control-agent",
+  "version": "0.1.0",
+  "description": "Mission Control sandbox agent for local Docker, Railway, and remote VM deployments.",
+  "type": "module",
+  "bin": {
+    "mission-control-agent": "dist/cli.cjs",
+    "mc-agent": "dist/cli.cjs"
+  },
+  "main": "dist/index.cjs",
+  "types": "dist/types/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist",
+    "docker",
+    "scripts",
+    "docker-entrypoint.sh",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "node build.mjs && tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "lint": "eslint src build.mjs",
+    "prepublishOnly": "npm run typecheck && npm test && npm run build"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "dependencies": {
+    "ignore": "7.0.5",
+    "node-pty": "1.1.0",
+    "ws": "8.21.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "25.8.0",
+    "@types/ws": "8.18.1",
+    "esbuild": "0.28.0",
+    "eslint": "10.4.0",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.59.3",
+    "vitest": "4.1.6"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AgentSystemLabs/mission-control-agent.git"
+  },
+  "homepage": "https://github.com/AgentSystemLabs/mission-control-agent#readme",
+  "bugs": {
+    "url": "https://github.com/AgentSystemLabs/mission-control-agent/issues"
+  },
+  "license": "MIT"
+}

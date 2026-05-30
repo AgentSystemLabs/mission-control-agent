@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "noEmit": false,
+    "rootDir": "src",
+    "outDir": "dist/types"
+  },
+  "include": ["src/index.ts", "src/protocol.ts", "src/server.ts", "src/config.ts", "src/shared/**/*.ts"]
+}
