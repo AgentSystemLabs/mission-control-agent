@@ -1,8 +1,11 @@
 import { build } from "esbuild";
+import * as fs from "node:fs";
 import { fileURLToPath } from "node:url";
 import * as path from "node:path";
 
 const dir = path.dirname(fileURLToPath(import.meta.url));
+fs.rmSync(path.join(dir, "dist"), { recursive: true, force: true });
+
 const common = {
   bundle: true,
   platform: "node",
