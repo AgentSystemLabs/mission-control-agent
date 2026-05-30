@@ -44,7 +44,9 @@ Quick version:
 
 1. Deploy from GitHub with **Root Directory** empty (repo root) — not `docker/remote-agent`.
 2. Set **Config-as-Code Path** to `deploy/railway/railway.json` (or use root `railway.toml`).
-3. Attach a Railway **volume** at **`/home/workspace`** (persists `~/.ssh`, Claude/Codex/Cursor auth, and git clones).
+3. Attach a Railway **volume** at **`/home/workspace`** — this must match the container `HOME` (persists `~/.ssh`, Claude/Codex/Cursor auth, and git clones via `/workspace` symlink).
+
+   Do not mount only `/workspace`; agent auth lives under `/home/workspace`.
 4. Set `MC_AGENT_API_KEY` (`openssl rand -hex 32`). Do not set `MC_AGENT_PORT`.
 5. Generate a public domain and use `wss://…` in Mission Control.
 

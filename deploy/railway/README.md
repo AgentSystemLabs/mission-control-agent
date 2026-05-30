@@ -15,6 +15,8 @@ Without a Railway volume, all of that is wiped on every redeploy.
 3. Set **Config-as-Code Path** to `deploy/railway/railway.json`.
 4. **Variables** → add `MC_AGENT_API_KEY` (see below).
 5. **Volumes** → add a volume mounted at **`/home/workspace`** (1 GB+ recommended).
+
+   The container `HOME` is `/home/workspace`. Mounting elsewhere (e.g. only `/workspace`) leaves SSH keys and CLI auth on ephemeral disk — and causes `EACCES` on `~/.ssh` if the home volume is root-owned without the entrypoint fix.
 6. **Networking** → generate a public domain (HTTPS).
 7. Deploy, then copy the API key into Mission Control as a **Remote VM** sandbox URL (`wss://…`).
 

@@ -9,32 +9,43 @@
 # drop privileges and exec the agent as `workspace`.
 set -e
 
+# Railway/Docker volumes mount as root:root and replace pre-created image dirs.
+# The agent runs as `workspace`, so fix the home mount root and expected subdirs
+# on every boot before dropping privileges.
+prepare_agent_home() {
+  home="/home/workspace"
+  mkdir -p \
+    "$home/.ssh" \
+    "$home/.config" \
+    "$home/.claude" \
+    "$home/.codex" \
+    "$home/.cursor" \
+    "$home/.local/share/opencode" \
+    "$home/workspace"
+  chown workspace:workspace "$home"
+  chown -R workspace:workspace \
+    "$home/.ssh" \
+    "$home/.config" \
+    "$home/.claude" \
+    "$home/.codex" \
+    "$home/.cursor" \
+    "$home/.local/share/opencode" \
+    "$home/workspace"
+  chmod 700 "$home/.ssh"
+}
+prepare_agent_home
+
 # Railway templates mount one volume at /home/workspace. When /workspace is not
 # separately volume-backed, store clones under /home/workspace/workspace and
 # symlink /workspace there so SSH keys, CLI auth, and repos share one volume.
 link_workspace_into_home() {
   [ "${MC_LINK_WORKSPACE_TO_HOME:-}" = "1" ] || return 0
   grep -qs "[[:space:]]/workspace[[:space:]]" /proc/mounts 2>/dev/null && return 0
-  mkdir -p /home/workspace/workspace
   if [ -L /workspace ]; then return 0; fi
   rm -rf /workspace
   ln -sfn /home/workspace/workspace /workspace
 }
 link_workspace_into_home
-
-# Small dotfile dirs (incl. persisted agent-CLI auth volumes — .claude/.codex/
-# .cursor): recursive is cheap and repairs the root-owned mount points Docker
-# creates for fresh named volumes.
-chown -R workspace:workspace \
-  /home/workspace/.ssh \
-  /home/workspace/.config \
-  /home/workspace/.claude \
-  /home/workspace/.codex \
-  /home/workspace/.cursor \
-  /home/workspace/.local/share/opencode \
-  /home/workspace/workspace \
-  2>/dev/null || true
-chmod 700 /home/workspace/.ssh 2>/dev/null || true
 
 # Package-manager caches (npm/pnpm). Older images built their global CLIs as root
 # with HOME=/home/workspace, leaving these root-owned so a runtime `npm i` (uid
