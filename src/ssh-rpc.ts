@@ -60,6 +60,7 @@ export class SshRpc {
           /* best effort */
         }
       }
+      this.ensureKnownHost("github.com");
       return {};
     }
 

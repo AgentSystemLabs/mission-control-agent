@@ -9,6 +9,19 @@
 # drop privileges and exec the agent as `workspace`.
 set -e
 
+# Railway templates mount one volume at /home/workspace. When /workspace is not
+# separately volume-backed, store clones under /home/workspace/workspace and
+# symlink /workspace there so SSH keys, CLI auth, and repos share one volume.
+link_workspace_into_home() {
+  [ "${MC_LINK_WORKSPACE_TO_HOME:-}" = "1" ] || return 0
+  grep -qs "[[:space:]]/workspace[[:space:]]" /proc/mounts 2>/dev/null && return 0
+  mkdir -p /home/workspace/workspace
+  if [ -L /workspace ]; then return 0; fi
+  rm -rf /workspace
+  ln -sfn /home/workspace/workspace /workspace
+}
+link_workspace_into_home
+
 # Small dotfile dirs (incl. persisted agent-CLI auth volumes — .claude/.codex/
 # .cursor): recursive is cheap and repairs the root-owned mount points Docker
 # creates for fresh named volumes.
@@ -19,6 +32,7 @@ chown -R workspace:workspace \
   /home/workspace/.codex \
   /home/workspace/.cursor \
   /home/workspace/.local/share/opencode \
+  /home/workspace/workspace \
   2>/dev/null || true
 chmod 700 /home/workspace/.ssh 2>/dev/null || true
 

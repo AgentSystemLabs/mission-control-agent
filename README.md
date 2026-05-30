@@ -38,11 +38,17 @@ mission-control-agent
 
 ## Railway
 
-Create a Railway service from this repo. The repo includes `railway.toml`, which points at `docker/remote-agent/Dockerfile`.
+Use the **[Railway deploy bundle](./deploy/railway/README.md)** for the recommended setup (persistent volume, health check, template checklist).
 
-**Important:** leave **Root Directory** empty (repo root). Do **not** set it to `docker/remote-agent` — the Dockerfile copies `src/`, `package.json`, and `docker-entrypoint.sh` from the repo root; a subdirectory root causes `"/docker-entrypoint.sh": not found` at build time.
+Quick version:
 
-Set `MC_AGENT_API_KEY` as a Railway variable. Do not set `MC_AGENT_PORT`; the agent reads Railway's injected `PORT` automatically. Generate a public domain and paste the `https://...` URL into Mission Control.
+1. Deploy from GitHub with **Root Directory** empty (repo root) — not `docker/remote-agent`.
+2. Set **Config-as-Code Path** to `deploy/railway/railway.json` (or use root `railway.toml`).
+3. Attach a Railway **volume** at **`/home/workspace`** (persists `~/.ssh`, Claude/Codex/Cursor auth, and git clones).
+4. Set `MC_AGENT_API_KEY` (`openssl rand -hex 32`). Do not set `MC_AGENT_PORT`.
+5. Generate a public domain and use `wss://…` in Mission Control.
+
+Without a volume, SSH keys and agent CLI login state are lost on every redeploy.
 
 ## Local Mission Control Docker Image
 
@@ -76,7 +82,7 @@ Recommended posture:
 - Use a long random `MC_AGENT_API_KEY` and rotate it if it may have leaked.
 - Use `wss://` for public access. Mission Control rejects plaintext `ws://` for public hostnames.
 - Prefer SSH tunnels, WireGuard/Tailscale, VPN/VPC, or private networking over a public domain.
-- Use generated sandbox keys for Git auth on remote VMs; do not upload host private keys.
+- Prefer generated sandbox keys on shared or public remote VMs; copy-host mode can upload your host private keys to the remote over the agent connection.
 - `/health` is intentionally unauthenticated and returns only liveness/version.
 
 Railway private networking is reachable only from services in the same Railway project/environment. A desktop app on your laptop needs a tunnel or gateway to reach `*.railway.internal`.

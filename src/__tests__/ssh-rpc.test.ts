@@ -45,9 +45,19 @@ describe("SshRpc copy mode", () => {
         { name: "..", content: "x" },
       ],
     });
-    // Nothing escaped the ssh dir.
+    // Nothing escaped the ssh dir; GitHub host key is still pinned for later clones.
     expect(fs.existsSync(path.join(path.dirname(sshDir), "evil"))).toBe(false);
-    expect(fs.readdirSync(sshDir)).toEqual([]);
+    expect(fs.readdirSync(sshDir)).toEqual(["known_hosts"]);
+  });
+
+  it("pins GitHub's host key after copy when known_hosts was not provided", async () => {
+    const rpc = new SshRpc(sshDir);
+    await rpc.setup({
+      mode: "copy",
+      files: [{ name: "id_ed25519", content: "PRIVATE" }],
+    });
+    const knownHosts = fs.readFileSync(path.join(sshDir, "known_hosts"), "utf8");
+    expect(knownHosts).toContain("github.com ssh-ed25519");
   });
 });
 

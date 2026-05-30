@@ -42,6 +42,7 @@ RUN mkdir -p /workspace /home/workspace/.ssh /home/workspace/.config \
   && chmod 700 /home/workspace/.ssh
 ENV MC_WORKSPACE_ROOT=/workspace \
     MC_AGENT_BIND_HOST=0.0.0.0 \
+    MC_LINK_WORKSPACE_TO_HOME=1 \
     CLAUDE_CONFIG_DIR=/home/workspace/.claude
 EXPOSE 9333
 WORKDIR /workspace
