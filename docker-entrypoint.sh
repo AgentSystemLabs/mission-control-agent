@@ -21,6 +21,7 @@ prepare_agent_home() {
     "$home/.codex" \
     "$home/.cursor" \
     "$home/.local/share/opencode" \
+    "$home/.local/state" \
     "$home/workspace"
   chown workspace:workspace "$home"
   chown -R workspace:workspace \
@@ -29,7 +30,7 @@ prepare_agent_home() {
     "$home/.claude" \
     "$home/.codex" \
     "$home/.cursor" \
-    "$home/.local/share/opencode" \
+    "$home/.local" \
     "$home/workspace"
   chmod 700 "$home/.ssh"
 }
