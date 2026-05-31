@@ -7,5 +7,5 @@
     "rootDir": "src",
     "outDir": "dist/types"
   },
-  "include": ["src/index.ts", "src/protocol.ts", "src/server.ts", "src/config.ts", "src/shared/**/*.ts"]
+  "include": ["src/index.ts", "src/protocol.ts", "src/server.ts", "src/version.ts", "src/config.ts", "src/shared/**/*.ts"]
 }

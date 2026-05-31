@@ -1,6 +1,6 @@
 {
   "name": "@agentsystemlabs/mission-control-agent",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Mission Control sandbox agent for local Docker, Railway, and remote VM deployments.",
   "type": "module",
   "bin": {

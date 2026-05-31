@@ -61,7 +61,7 @@ railway redeploy
 
 ```sh
 curl -s "https://<your-service>.up.railway.app/health"
-# {"ok":true,"version":"0.3.0"}
+# {"ok":true,"version":"0.2.0"}
 ```
 
 ## Publish as a Railway template
