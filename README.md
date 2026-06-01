@@ -62,6 +62,40 @@ docker/sandbox-base/Dockerfile
 
 That keeps local Docker sandboxes and remote VM sandboxes on the same published agent runtime.
 
+## GitHub CLI (`gh`) authentication
+
+The image includes the GitHub CLI so agents can open pull requests (`gh pr create`). `gh`
+authenticates to the GitHub **API with a token** — it does **not** use your SSH key (which only
+covers git push/clone). Authenticate it once per deployment, using one of:
+
+**Option A — interactive login (persists on the home volume).** In a sandbox/VM shell:
+
+```sh
+gh auth login
+```
+
+Choose **GitHub.com**, **SSH** as the git protocol (reuses your existing key for pushes), then
+**"Login with a web browser"** and open the printed `github.com/login/device` code on your
+machine — or paste a Personal Access Token. Credentials are saved under `~/.config/gh`, which lives
+on the persistent home volume (`/home/workspace`), so this is a one-time step that survives redeploys.
+
+Non-interactive equivalent:
+
+```sh
+echo <YOUR_PAT> | gh auth login --with-token
+```
+
+**Option B — token via environment.** Set `GH_TOKEN` (a Personal Access Token) in your
+deployment's environment. `gh` picks it up automatically with no login step; the token lives in your
+platform's env config. (The agent forwards `GH_TOKEN` to agent sessions — only `MC_*` vars are
+stripped.)
+
+Verify either way:
+
+```sh
+gh auth status
+```
+
 ## Environment
 
 | Var | Default | Purpose |
