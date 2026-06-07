@@ -10,7 +10,7 @@ import {
   type SpawnPlan,
   type TaskAgentSpawn,
 } from "./shared/pty-spawn-policy";
-import { buildSandboxMissionControlApiUrl } from "./shared/mission-control-hook-env";
+import { buildAgentLocalHookApiUrl } from "./shared/mission-control-hook-env";
 import { applyAgentPtyEnv } from "./shared/agent-pty-env";
 import { resolveAgentCommandOnPath, resolveCommandOnPath } from "./command-resolver";
 import { resolveInsideWorkspace } from "./workspace-guard";
@@ -36,6 +36,8 @@ type PtyRecord = {
 
 export type PtyHostOptions = {
   workspaceRoot: string;
+  /** Loopback port the agent HTTP server listens on (hook POST target). */
+  agentPort?: number;
   /** Connection id for correlating log lines (optional). */
   connId?: string;
   /** Base environment to derive child env from (defaults to process.env). */
@@ -59,8 +61,8 @@ function sanitizedEnv(base: NodeJS.ProcessEnv): Record<string, string> {
 /**
  * Runs PTYs inside the sandbox container, mirroring the host PTY manager's
  * lifecycle (seq-numbered output, ring-buffer replay) and reusing the exact
- * same spawn allow-list. Agent hooks are bootstrapped to POST back to the host
- * via host.docker.internal.
+ * same spawn allow-list. Agent hooks POST to the agent's loopback HTTP API,
+ * which relays status events to Mission Control over WebSocket.
  */
 export class PtyHost {
   private readonly ptys = new Map<string, PtyRecord>();
@@ -69,6 +71,7 @@ export class PtyHost {
   private readonly baseEnv: NodeJS.ProcessEnv;
   private readonly spawnFn: typeof pty.spawn;
   private readonly policyDeps: SpawnPolicyDeps;
+  private readonly agentPort: number;
 
   constructor(
     private readonly emit: (msg: ServerMessage) => void,
@@ -77,6 +80,7 @@ export class PtyHost {
     this.workspaceRoot = opts.workspaceRoot;
     this.connId = opts.connId ?? "c?";
     this.baseEnv = opts.env ?? process.env;
+    this.agentPort = opts.agentPort ?? 9333;
     this.spawnFn = opts.spawnFn ?? pty.spawn;
     this.policyDeps = {
       projectRoots: () => [this.workspaceRoot],
@@ -290,7 +294,7 @@ export class PtyHost {
     env.MC_TASK_ID = msg.taskId;
     env.MC_THEME = msg.missionControlTheme === "light" ? "light" : "dark";
     if (plan.mode === "agent" && msg.mcEnv) {
-      const apiUrl = buildSandboxMissionControlApiUrl(msg.mcEnv.port);
+      const apiUrl = buildAgentLocalHookApiUrl(this.agentPort);
       if (apiUrl) env.MC_API_URL = apiUrl;
       if (msg.mcEnv.token) env.MC_API_TOKEN = msg.mcEnv.token;
       applyAgentPtyEnv(env, plan.agent);

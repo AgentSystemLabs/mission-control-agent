@@ -7,11 +7,16 @@ import { GitRpc } from "./git-rpc";
 import { SshRpc } from "./ssh-rpc";
 import { CredsRpc } from "./creds-rpc";
 import { probeAgentVersions } from "./health";
-import { parseClientMessage, type ServerMessage, type RpcMessage } from "./protocol";
+import { parseClientMessage, type ServerMessage, type RpcMessage, type HookMessage } from "./protocol";
 import type { AgentConfig } from "./config";
 import { ActivityTracker } from "./activity-tracker";
 import { log } from "./logger";
 import { AGENT_VERSION } from "./version";
+import {
+  isLoopbackRemoteAddress,
+  parseHookHttpRequest,
+  readRequestBody,
+} from "./hook-http";
 
 export { AGENT_VERSION } from "./version";
 
@@ -70,6 +75,7 @@ export function isPaired(req: IncomingMessage, config: AgentConfig): boolean {
 
 type PtyEmitter = (msg: ServerMessage) => void;
 type AttachPtyEmitter = (emit: PtyEmitter) => () => void;
+type HookRelay = (msg: HookMessage) => void;
 
 function handleConnection(
   ws: WebSocket,
@@ -209,13 +215,16 @@ export function createAgentServer(config: AgentConfig): Server {
   // starts its idle clock from now (the watchdog no-ops until this file exists).
   activity.touchNow();
   const ptyEmitters = new Set<PtyEmitter>();
+  const hookRelay: HookRelay = (msg) => {
+    for (const emit of ptyEmitters) emit(msg);
+  };
   const ptyHost = new PtyHost(
     (msg) => {
       // PTY output (a running build/server printing) is activity too.
       activity.touch();
       for (const emit of ptyEmitters) emit(msg);
     },
-    { workspaceRoot: config.workspaceRoot, connId: "server" },
+    { workspaceRoot: config.workspaceRoot, connId: "server", agentPort: config.port },
   );
 
   const httpServer = createServer((req, res) => {
@@ -226,6 +235,35 @@ export function createAgentServer(config: AgentConfig): Server {
       res.end(JSON.stringify({ ok: true, version: AGENT_VERSION }));
       return;
     }
+
+    const hook = parseHookHttpRequest(req);
+    if (hook) {
+      if (!isLoopbackRemoteAddress(req)) {
+        log("warn", "hook.reject", { reason: "non-loopback", remote: req.socket.remoteAddress });
+        res.writeHead(403);
+        res.end();
+        return;
+      }
+      void (async () => {
+        try {
+          const body = await readRequestBody(req);
+          activity.touch();
+          hookRelay({ type: "hook", slug: hook.slug, taskId: hook.taskId, hookEvent: hook.hookEvent, body });
+          res.writeHead(204);
+          res.end();
+        } catch (err) {
+          log("warn", "hook.fail", {
+            slug: hook.slug,
+            taskId: hook.taskId,
+            err: err instanceof Error ? err.message : String(err),
+          });
+          res.writeHead(400);
+          res.end();
+        }
+      })();
+      return;
+    }
+
     res.writeHead(404);
     res.end();
   });

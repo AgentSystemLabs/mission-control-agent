@@ -21,7 +21,7 @@ export type SpawnMessage = {
   rows?: number;
   dangerouslySkipPermissions?: boolean;
   missionControlTheme?: "dark" | "light";
-  /** MC API the in-container hooks POST to; `port` is the MC port on the Docker host. */
+  /** MC credentials the agent relays hook events to over WebSocket (`port` = host MC port). */
   mcEnv?: { port?: number; token?: string };
 };
 export type WriteMessage = { type: "write"; ptyId: string; data: string };
@@ -84,6 +84,14 @@ export type RpcResultMessage =
   | { type: "rpcResult"; reqId: string; ok: true; result: unknown }
   | { type: "rpcResult"; reqId: string; ok: false; error: string };
 export type FsChangeMessage = { type: "fs.change"; watchId: string; path: string; mtimeMs: number };
+/** Agent-local hook POST relayed to Mission Control over the paired WebSocket. */
+export type HookMessage = {
+  type: "hook";
+  slug: string;
+  taskId: string;
+  hookEvent?: string;
+  body: string;
+};
 
 export type ServerMessage =
   | ReadyMessage
@@ -93,7 +101,8 @@ export type ServerMessage =
   | ExitMessage
   | ReplayResultMessage
   | RpcResultMessage
-  | FsChangeMessage;
+  | FsChangeMessage
+  | HookMessage;
 
 // ──────────────────────────────────────────────────────────────────────────
 // Defensive wire parsing — the socket is paired but still untrusted input.
