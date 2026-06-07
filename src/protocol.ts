@@ -14,6 +14,8 @@ export type SpawnMessage = {
   /** Agent key (claude-code/codex/cursor-cli/opencode). Omit for a shell terminal. */
   agent?: string;
   shell?: boolean;
+  /** Project-less "home" shell terminal: open at the agent's own home dir. */
+  home?: boolean;
   args?: string[];
   cols?: number;
   rows?: number;
@@ -36,11 +38,19 @@ export type RpcParams = {
   "fs.unwatch": { watchId: string };
   "git.status": { repo: string };
   "git.diff": { repo: string; file: string; staged?: boolean };
-  "git.clone": { remote: string; slug: string };
+  "git.clone": { remote: string; slug: string; branch?: string };
   "ssh.setup":
     | { mode: "generate" }
     | { mode: "copy"; files: Array<{ name: string; content: string }> };
+  "creds.setup": {
+    items: Array<{ tool: CredsTool; kind: CredsKind; content: string }>;
+  };
 };
+
+/** AI-CLI tools whose host login can be copied into a sandbox. */
+export type CredsTool = "claude" | "codex" | "cursor" | "opencode";
+/** Which file a credentials item maps to on the VM (the agent resolves the path). */
+export type CredsKind = "credentials" | "state";
 export type RpcMethod = keyof RpcParams;
 
 export type RpcMessage = {
@@ -99,6 +109,7 @@ const RPC_METHODS: ReadonlySet<string> = new Set<RpcMethod>([
   "git.diff",
   "git.clone",
   "ssh.setup",
+  "creds.setup",
 ]);
 
 function isRecord(v: unknown): v is Record<string, unknown> {
